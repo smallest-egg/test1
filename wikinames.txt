@@ -1,0 +1,60 @@
+Insulin Signaling 
+Glucose Homeostasis 
+Eukaryotic Transcription Initiation 
+Integrin-mediated Cell Adhesion 
+Type II interferon signaling (IFNG) 
+SCFA and skeletal muscle substrate metabolism 
+Prostaglandin Synthesis and Regulation 
+TLR4 Signaling and Tolerance 
+Estrogen metabolism 
+Neurotransmitter Disorders 
+Caffeine and Theobromine metabolism 
+Mismatch repair 
+Ovarian Infertility Genes 
+Rac1-Pak1-p38-MMP-2 pathway 
+Prolactin Signaling Pathway 
+Simplified Depiction of MYD88 Distinct Input-Output Pathway 
+Oxidative phosphorylation 
+Folate Metabolism 
+Synaptic Vesicle Pathway 
+Degradation pathway of sphingolipids, including diseases 
+Nanoparticle triggered autophagic cell death 
+Diclofenac Metabolic Pathway 
+Complement Activation 
+TGF-beta Signaling Pathway 
+IL-1 signaling pathway 
+RNA interference 
+Differentiation Pathway 
+BMP2-WNT4-FOXO1 Pathway in Human Primary Endometrial Stromal Cell Differentiation 
+Glucocorticoid and Mineralcorticoid Metabolism 
+Folate-Alcohol and Cancer Pathway Hypotheses 
+GPCRs, Class B Secretin-like 
+Parkin-Ubiquitin Proteasomal System pathway 
+Metabolism of Tetrahydrocannabinol (THC) 
+Methionine De Novo and Salvage Pathway 
+NRF2 pathway 
+Glucuronidation 
+Regulation of Microtubule Cytoskeleton 
+Bladder Cancer 
+Mevalonate arm of cholesterol biosynthesis pathway 
+Homologous recombination 
+G Protein Signaling Pathways 
+Nucleotide-binding Oligomerization Domain (NOD) pathway 
+ATR Signaling 
+mir34a and TGIF2 in osteoclastogenesis 
+IL-7 Signaling Pathway 
+NAD+ biosynthetic pathways 
+Sulfation Biotransformation Reaction 
+Drug Induction of Bile Acid Pathway 
+Vitamin B12 Metabolism 
+Cytoplasmic Ribosomal Proteins 
+Apoptosis Modulation by HSP70 
+Photodynamic therapy-induced unfolded protein response 
+BDNF-TrkB Signaling 
+Oncostatin M Signaling Pathway 
+Gastric Cancer Network 1 
+Transcriptional activation by NRF2 
+Monoamine Transport 
+Myometrial Relaxation and Contraction Pathways 
+Liver X Receptor Pathway 
+MAPK Cascade 
