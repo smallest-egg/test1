@@ -1,24 +1,14 @@
 import re
 from enforceStyle import enforceStyle, isAlias
-from collections import namedtuple, Counter
 
 aliasDict = {}
-Pathway = namedtuple('Pathway', ['ID', 'Desc', "Alias"])
-fileName1 = "keggnamesfull.txt"
-fileName2 = "wikinamesfull.txt"
-Counter = Counter()
 
-def weightScoreBySigmoid(score, numOccurences):
-    # More heavily penalizes common words, no steep drop for first few numbers to account for noise.
-    dampingFactor = 1 / (1 + (numOccurences / 5) ** 2.5)
-    return score * dampingFactor
-
-def getProcessRelatedWords(string):
-    return [word for word in string.split() if word.endswith(("sis", "ism", "ion", "ing", "nce", "ade", "air"))]
+#def getProcessRelatedWords(string):
+#    return [word for word in string.split() if word.endswith(("sis", "ism", "ion", "ing", "nce", "ade", "air"))]
 
 def stripUselessWords(string):
     # Need to make more efficient when bothered
-    clausesToStrip = ("Role", "Pathway", "Superpathway", "Roles", "Pathways", "Superpathways", "Overview", "Hypothesized", "Hypothesis", "And", "Of", "Other")
+    clausesToStrip = ("Role", "Pathway", "Superpathway", "Roles", "Pathways", "Superpathways", "Overview", "Hypothesized", "Hypothesis", "Other", "The")
     rearClausesToStrip = clausesToStrip + ("Including Diseases", "Including")
     strippedSomething = True
     while string and strippedSomething == True:
@@ -60,43 +50,19 @@ def separateQualifiers(string):
             qualifierStart = minIndexSoFar + len(flag)
     return string[qualifierStart:], string[:minIndexSoFar].rstrip()
 
-def getCommonWords(fileNameList):
-    for fileName in fileNameList:
-        with open (fileName) as file:
-            lines = [line[:-1] for line in file.readlines()]
-        for line in lines:
-            Counter.update(re.sub(r"[^\w]", " ", enforceStyle(line)).split())
-    print(Counter)
-
-getCommonWords([fileName1, fileName2])
-
 def processString(string):
     logs = []
-    for clause in string.split(" / "):
+    for clause in string.split(" | "):
         clause = reorderOfsInNonconjunctiveClause(clause)
         alias, aliasAlt, clauseSansAlias = separateAlias(clause)
         if alias:
             aliasDict[aliasAlt] = alias
-        qualifier, clauseSansQualifiers = separateQualifiers(clauseSansAlias)
-        qualifier = stripUselessWords(qualifier)
-        clauseSansQualifiers = stripUselessWords(clauseSansQualifiers)
-        if not clauseSansQualifiers and qualifier:
-            clauseSansQualifiers = qualifier
-        if clauseSansQualifiers:
-            logs.append(Pathway(clauseSansQualifiers, qualifier, aliasAlt))
-        print(logs)
+        clauseSansAlias = stripUselessWords(clauseSansAlias)
+        logs.append(clauseSansAlias)
     return logs
 
-def processToFile(fileNameList):
-    for fileName in fileNameList:
-        with open (fileName) as file:
-            lines = [line[:-1] for line in file.readlines()]
-            for line in lines:
-                newLine = "/".join([subpath.ID + " " + subpath.Desc for subpath in processString(enforceStyle(line))])
-                Counter.update(re.sub(r"[^\w]", " ", newLine).split())
-    print(Counter)
-
-processToFile([fileName1, fileName2])
+def getAliasDict():
+    return aliasDict
 
 processString(enforceStyle("Metabolism of Tetrahydrocannabinol (THC)"))
 processString(enforceStyle("Insulin signalling in human adipocytes (diabetic condition)"))

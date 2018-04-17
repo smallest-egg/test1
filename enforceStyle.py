@@ -1,4 +1,5 @@
 import re
+from roman import toRoman
 
 def collapseSpaces(string):
     singleSpacedString = re.sub(" +", " ", string)
@@ -11,25 +12,35 @@ def removeBracketsIfNotAlias(string):
     return re.sub("\(((\s+In|On|With).*?)\)", "\\1", standardizedSimilarPrepositions)
 
 def isAlias(word):
-    return any(char.isdigit() for char in word) or sum(1 for char in word if char.isupper()) > 1
+    return (any(char.isdigit() for char in word) and not word.isdigit()) or sum(1 for char in word if char.isupper()) / len(word) > 0.2
 
 def capitalizeWords(string):
-    capitalizedWords = []
+    newWords = []
     for word in string.split():
         # Capitalize word only if it is not an acronym or name including numerics (e.g. p53)
         if isAlias(word):
-            capitalizedWords.append(word)
+            newWords.append(word)
         else:
-            capitalizedWords.append(word.capitalize())
-    return " ".join(capitalizedWords)
+            newWords.append(word.capitalize())
+
+    return " ".join(newWords)
 
 def spaceOutSymbols(string):
     return re.sub("(\-|\(|\))", " \\1 ", string)
 
 def enforceConjunctionStyle(string):
     # And/Or handled separately with spaces so as to not be thrown off by words with those strings
-    noWordedConjunctionsString = re.sub(" (and|And|or|Or) ", " / ", string)
-    return re.sub("(,\s+/|,|/|&)", " / ", noWordedConjunctionsString)
+    noWordedConjunctionsString = re.sub(" (and|And|or|Or) ", " | ", string)
+    return re.sub("(,\s+/|,|/|&)", " | ", noWordedConjunctionsString)
+
+def romanizeNumerals(string):
+    newWords = []
+    for word in string.split():
+        if word.isdigit():
+            newWords.append(toRoman(int(word)))
+        else:
+            newWords.append(word)
+    return " ".join(newWords)
 
 def enforceStyle(string):
-    return collapseSpaces(removeBracketsIfNotAlias(capitalizeWords(spaceOutSymbols(enforceConjunctionStyle(string)))))
+    return romanizeNumerals(collapseSpaces(removeBracketsIfNotAlias(capitalizeWords(enforceConjunctionStyle(spaceOutSymbols(string))))))
