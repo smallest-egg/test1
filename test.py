@@ -1,10 +1,17 @@
 from difflib import SequenceMatcher
 import re
-from string import capwords
-from collections import namedtuple
+from collections import namedtuple, Counter
 
 aliasDict = {}
 Pathway = namedtuple('Pathway', ['ID', 'Desc', "Alias"])
+fileName1 = "keggnamesfull.txt"
+fileName2 = "wikinamesfull.txt"
+Counter = Counter()
+
+def weightScoreBySigmoid(score, numOccurences):
+    # More heavily penalizes common words, no steep drop for first few numbers to account for noise.
+    dampingFactor = 1 / (1 + (numOccurences / 5) ** 2.5)
+    return score * dampingFactor
 
 def getBestPartialMatch(string1, string2):
     shorterString, longerString = sorted([string1, string2], key = len)
@@ -53,7 +60,7 @@ def getProcessRelatedWords(string):
     return [word for word in string.split() if word.endswith(("sis", "ism", "ion", "ing", "nce", "ade", "air"))]
 
 def stripUselessWords(string):
-    #Need to make more efficient when bothered
+    # Need to make more efficient when bothered
     clausesToStrip = ("Role", "Pathway", "Superpathway", "Roles", "Pathways", "Superpathways", "Overview", "Hypothesized", "Hypothesis", "And", "Of", "Other")
     rearClausesToStrip = clausesToStrip + ("Including Diseases", "Including")
     strippedSomething = True
@@ -94,6 +101,15 @@ def separateQualifiers(string):
             qualifierStart = minIndexSoFar + len(flag)
     return string[qualifierStart:], string[:minIndexSoFar].rstrip()
 
+def getCommonWords(fileNameList):
+    for fileName in fileNameList:
+        with open (fileName) as file:
+            lines = [line[:-1] for line in file.readlines()]
+        for line in lines:
+            Counter.update(re.sub(r"[^\w]", " ", enforceStyle(line)).split())
+    print(Counter)
+
+getCommonWords([fileName1, fileName2])
 
 def processString(string):
     logs = []
@@ -109,19 +125,19 @@ def processString(string):
             clauseSansQualifiers = qualifier
         if clauseSansQualifiers:
             logs.append(Pathway(clauseSansQualifiers, qualifier, aliasAlt))
-    for i, log in enumerate(logs):
-        logProcessRelatedWords = getProcessRelatedWords(log[0])
-        if logProcessRelatedWords == log[0].split():
-            for j in range(i + 1, len(logs)):
-                possRelated = logs[j][0]
-                possRelatedProcessWords = getProcessRelatedWords(possRelated)
-                if possRelatedProcessWords:
-                    relatedDesc = possRelated[:max(0,possRelated.find(possRelatedProcessWords[0]) - 1)]
-                    logs[i] = Pathway(relatedDesc + " " + log[0], log[1], log[2])
-                    break
-        else if not logProcessRelatedWords
-
     print(logs)
+    return logs
+
+def processToFile(fileNameList):
+    for fileName in fileNameList:
+        with open (fileName) as file:
+            lines = [line[:-1] for line in file.readlines()]
+            for line in lines:
+                newLine = "/".join([subpath.ID + " " + subpath.Desc for subpath in processString(enforceStyle(line))])
+                Counter.update(re.sub(r"[^\w]", " ", newLine).split())
+    print(Counter)
+
+processToFile([fileName1, fileName2])
 
 processString(enforceStyle("Metabolism of Tetrahydrocannabinol (THC)"))
 processString(enforceStyle("Insulin signalling in human adipocytes (diabetic condition)"))
