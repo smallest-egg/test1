@@ -17,7 +17,6 @@ def getCommonWords(fileNameList):
             lines = [line[:-1] for line in file.readlines()]
         for line in lines:
             Counter.update([stem(word) for word in re.sub(r"[^\w]", " ", enforceStyle(line)).split()])
-    print(Counter)
 
 def updateCounter(list):
     counter.update(list)
