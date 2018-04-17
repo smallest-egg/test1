@@ -1,5 +1,5 @@
-from difflib import SequenceMatcher
 import re
+from enforceStyle import enforceStyle, isAlias
 from collections import namedtuple, Counter
 
 aliasDict = {}
@@ -12,49 +12,6 @@ def weightScoreBySigmoid(score, numOccurences):
     # More heavily penalizes common words, no steep drop for first few numbers to account for noise.
     dampingFactor = 1 / (1 + (numOccurences / 5) ** 2.5)
     return score * dampingFactor
-
-def getBestPartialMatch(string1, string2):
-    shorterString, longerString = sorted([string1, string2], key = len)
-    matcher = SequenceMatcher(None, shorterString, longerString, False)
-    numOfPartials = len(longerString) - len(shorterString) + 1
-
-    partialMatches = [matcher.find_longest_match(0, len(shorterString), i, i + len(shorterString)) for i in range(numOfPartials)]
-    bestPartialMatch = max(partialMatches, key = lambda match: match.size)
-    return bestPartialMatch
-
-def isAlias(word):
-    return any(char.isdigit() for char in word) or sum(1 for char in word if char.isupper()) > 1
-
-def spaceOutSymbols(string):
-    return re.sub("(\-|\(|\))", " \\1 ", string)
-
-def capitalizeWords(string):
-    capitalizedWords = []
-    for word in string.split():
-        # Capitalize word only if it is not an acronym or name including numerics (e.g. p53)
-        if isAlias(word):
-            capitalizedWords.append(word)
-        else:
-            capitalizedWords.append(word.capitalize())
-    return " ".join(capitalizedWords)
-
-def collapseSpaces(string):
-    singleSpacedString = re.sub(" +", " ", string)
-    respacedBracketsString = singleSpacedString.replace("( ", "(")
-    respacedBracketsString = respacedBracketsString.replace(" )", ")")
-    return re.sub(" \- ", "-", respacedBracketsString)
-
-def enforceConjunctionStyle(string):
-    # And/Or handled separately with spaces so as to not be thrown off by words with those strings
-    noWordedConjunctionsString = re.sub(" (and|And|or|Or) ", " / ", string)
-    return re.sub("(,\s+/|,|/|&)", " / ", noWordedConjunctionsString)
-
-def removeBracketsIfNotAlias(string):
-    standardizedSimilarPrepositions = re.sub("\((\s+From|Via|By|Due To|Only)(.*?)\)", "By\\2", string)
-    return re.sub("\(((\s+In|On|With).*?)\)", "\\1", standardizedSimilarPrepositions)
-
-def enforceStyle(string):
-    return collapseSpaces(removeBracketsIfNotAlias(capitalizeWords(spaceOutSymbols(enforceConjunctionStyle(string)))))
 
 def getProcessRelatedWords(string):
     return [word for word in string.split() if word.endswith(("sis", "ism", "ion", "ing", "nce", "ade", "air"))]
@@ -86,6 +43,8 @@ def separateAlias(string):
         hasAlias = any (isAlias(word) for word in possibleAlias.split())
         if hasAlias:
             aliasAlt = string[:leftBracket - 1]
+            if len(possibleAlias) < len(aliasAlt):
+                possibleAlias, aliasAlt = aliasAlt, possibleAlias
             stringSansAlias = possibleAlias + string[min(rightBracket + 1, len(string)):]
             return possibleAlias, aliasAlt, stringSansAlias
     return "", "", string
@@ -125,7 +84,7 @@ def processString(string):
             clauseSansQualifiers = qualifier
         if clauseSansQualifiers:
             logs.append(Pathway(clauseSansQualifiers, qualifier, aliasAlt))
-    print(logs)
+        print(logs)
     return logs
 
 def processToFile(fileNameList):
