@@ -5,6 +5,7 @@ from enforceStyle import enforceStyle
 from stringManipulator import processString, getAliasDict
 from wordWeighting import updateCounter, getCommonWords, getCounter
 from difflib import get_close_matches
+from fuzzyMatching import isFuzzyMatch
 
 import re
 
@@ -13,6 +14,8 @@ cachedStopWords = set(stopwords.words("english"))
 fileName1 = "keggnamesfull.txt"
 fileName2 = "wikinamesfull.txt"
 fileList = [fileName1, fileName2]
+memoize = {}
+originalPathwaysList = []
 processedPathwaysList = []
 processedWordsList = []
 allCandidateLists = []
@@ -38,6 +41,7 @@ def stopwordStripAndStem(line):
     return strippedStemmedList
 
 def initLine(line):
+    originalPathwaysList.append(line)
     strippedStemmedList = stopwordStripAndStem(line)
     processedWordsList.extend(strippedStemmedList)
     processedPathwaysList.append(" ".join(strippedStemmedList))
@@ -52,7 +56,9 @@ def initLine(line):
 def getCandidates(line):
     candidateList = []
     for word in stopwordStripAndStem(line):
-        for matchedWord in get_close_matches(word, processedWordsList, n = 3, cutoff = 0.8):
+        if word not in memoize:
+            memoize[word] = get_close_matches(word, processedWordsList, n = 3, cutoff = 0.75)
+        for matchedWord in memoize[word]:
             candidateList.extend(matchDict[matchedWord])
     candidateList = set(candidateList)
     if lineNumber[0] in candidateList:
@@ -61,14 +67,14 @@ def getCandidates(line):
     lineNumber[0] += 1
 
 
-getCommonWords(fileList)
+#getCommonWords(fileList)
 processFile(fileList, initLine)
 
 processedWordsList = set(processedWordsList)
 
 uselessKeys = []
 for key, val in matchDict.items():
-    if len(val) > 20:
+    if len(val) > 15:
         uselessKeys.append(key)
 for key in uselessKeys:
     del matchDict[key]
@@ -78,4 +84,7 @@ processedWordsList = list(processedWordsList)
 
 processFile(fileList, getCandidates)
 
-print(allCandidateLists)
+for pathwayNum, candidates in enumerate(allCandidateLists):
+    for candidate in candidates:
+        if isFuzzyMatch(processedPathwaysList[pathwayNum], processedPathwaysList[candidate]):
+            print(originalPathwaysList[pathwayNum] + " ||| " + originalPathwaysList[candidate])
