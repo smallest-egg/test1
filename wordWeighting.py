@@ -8,7 +8,7 @@ counter = Counter()
 
 def weightScoreBySigmoid(score, numOccurences):
     # More heavily penalizes common words, no steep drop for first few numbers to account for noise.
-    dampingFactor = 1 / (1 + (numOccurences / 5) ** 2.5)
+    dampingFactor = 1 / (2 + (numOccurences / 5) ** 2.5) + 0.5
     return score * dampingFactor
 
 def getCommonWords(fileNameList):
