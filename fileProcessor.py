@@ -7,6 +7,7 @@ from wordWeighting import getCounter, updateCounter
 from difflib import get_close_matches
 from fuzzyMatching import isFuzzyMatch
 from lcs import isIntPathMatch
+from pickle import load, dump
 
 import re
 import pprint
@@ -130,6 +131,27 @@ def merge(pathwayPairs):
     sets = results
   return sets
 
+# MAGIC NUMBERS ALERT. Fix later.
+def dbName(ind):
+    if ind >= 327:
+        return "KEGG"
+    else:
+        return "Wiki"
+
+def dbLine(ind):
+    return ind % 327
+
+def formatAndWriteMerges(pathwayPairsToMerge, outFileName):
+    pathwaysToMerge = merge(pathwayPairsToMerge)
+    formattedPathwaysToMerge = [[(dbName(ind), dbLine(ind), originalPathwaysList[ind]) for ind in pathwaysSet] for pathwaysSet in pathwaysToMerge]
+    pp.pprint(formattedPathwaysToMerge)
+    mergeCount = 0
+    for pathwaysSet in pathwaysToMerge:
+        mergeCount += len(pathwaysSet) - 1
+    print(mergeCount)
+    with open(outFileName, "wb") as outFile:
+        dump(formattedPathwaysToMerge, outFile)
+
 def detectPathwayMatches():
     pathwayPairsToMerge = set()
     for pathwayNum, candidates in enumerate(allCandidateLists):
@@ -137,13 +159,7 @@ def detectPathwayMatches():
             assert pathwayNum != candidate
             if isFuzzyMatch(processedPathwaysList[pathwayNum], processedPathwaysList[candidate]):
                 pathwayPairsToMerge.add((candidate, pathwayNum))
-    pathwaysToMerge = merge(pathwayPairsToMerge)
-    namesOfPathwaysToMerge = [[originalPathwaysList[ind] for ind in pathwaysSet] for pathwaysSet in pathwaysToMerge]
-    pp.pprint(namesOfPathwaysToMerge)
-    mergeCount = 0
-    for pathwaysSet in pathwaysToMerge:
-        mergeCount += len(pathwaysSet) - 1
-    print(mergeCount)
+    formatAndWriteMerges(pathwayPairsToMerge, "ppint.pickle")
 
 processFile(fileList, stripStemLine)
 aliasDict = getAliasDict()
@@ -167,12 +183,6 @@ def simulateIntPath(fileNameList):
             if key not in doneBefore and ind != innerInd and isIntPathMatch(line, innerLine):
                 pathwayPairsToMerge.add((ind, innerInd))
                 doneBefore.add(key)
-    pathwaysToMerge = merge(pathwayPairsToMerge)
-    namesOfPathwaysToMerge = [[originalPathwaysList[ind] for ind in pathwaysSet] for pathwaysSet in pathwaysToMerge]
-    pp.pprint(namesOfPathwaysToMerge)
-    mergeCount = 0
-    for pathwaysSet in pathwaysToMerge:
-        mergeCount += len(pathwaysSet) - 1
-    print(mergeCount)
+    formatAndWriteMerges(pathwayPairsToMerge, "intpath.pickle")
 
 simulateIntPath(fileList)
