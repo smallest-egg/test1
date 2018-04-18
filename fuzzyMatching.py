@@ -14,7 +14,7 @@ def isFuzzyMatch(string1, string2):
         words1, words2 = words2, words1
     intersectSet = set()
     for word1 in words1:
-        match = get_close_matches(word1, words2, n = 1, cutoff = 0.9)
+        match = get_close_matches(word1, words2, n = 1, cutoff = 0.85)
         if match:
             intersectSet.add((word1, match[0]))
     for word1, word2 in intersectSet:

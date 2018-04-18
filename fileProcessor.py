@@ -3,11 +3,13 @@ from nltk import download
 from nltk.corpus import stopwords
 from enforceStyle import enforceStyle
 from stringManipulator import processString, getAliasDict
-from wordWeighting import updateCounter, getCommonWords, getCounter
+from wordWeighting import getCounter
 from difflib import get_close_matches
 from fuzzyMatching import isFuzzyMatch
 
 import re
+import pprint
+pp = pprint.PrettyPrinter(indent=2, width=150)
 
 cachedStopWords = set(stopwords.words("english"))
 
@@ -37,7 +39,6 @@ def tokenize(line):
 
 def stopwordStripAndStem(line):
     strippedStemmedList = [stem(word) for word in tokenize(line) if word.lower() not in cachedStopWords]
-    updateCounter(strippedStemmedList)
     return strippedStemmedList
 
 def stripStemLine(line):
@@ -51,6 +52,31 @@ def stripStemLine(line):
             matchDict[word].append(lineNumber[0])
         else:
             matchDict[word] = [lineNumber[0]]
+    lineNumber[0] += 1
+
+def replaceAliasIn(line):
+    for alias in aliasDict.keys():
+        if alias in line:
+            ind = line.find(alias)
+            noTextLeft = ind == 0 or line[ind - 1] in (" ", "-")
+            noTextRight = (ind + len(alias) >= len(line)) or (line[ind + len(alias)] in (" ", "-"))
+            if noTextLeft and noTextRight:
+                # print("REPLACED ALIAS: " + line)
+                return line.replace(alias, aliasDict[alias])
+    return line
+
+def getCandidates(line):
+    candidateList = []
+    line = replaceAliasIn(line)
+    for word in stopwordStripAndStem(line):
+        if word not in memoize:
+            memoize[word] = get_close_matches(word, processedWordsList, n = 3, cutoff = 0.75)
+        for matchedWord in memoize[word]:
+            candidateList.extend(matchDict[matchedWord])
+    candidateList = set(candidateList)
+    if lineNumber[0] in candidateList:
+        candidateList.remove(lineNumber[0])
+    allCandidateLists.append(list(candidateList))
     lineNumber[0] += 1
 
 def enforceAliasReplacement():
@@ -69,53 +95,57 @@ def enforceAliasReplacement():
         else:
             matchDict[key] = matchDict[val]
 
-def replaceAliasIn(line):
-    for alias in aliasDict.keys():
-        if alias in line:
-            ind = line.find(alias)
-            noTextLeft = ind == 0 or line[ind - 1] in (" ", "-")
-            noTextRight = (ind + len(alias) >= len(line)) or (line[ind + len(alias)] in (" ", "-"))
-            if noTextLeft and noTextRight:
-                print("REPLACED ALIAS: " + line)
-                return line.replace(alias, aliasDict[alias])
-    return line
+def cleanUselessKeys():
+    processedWordsSet = set(processedWordsList)
 
-def getCandidates(line):
-    candidateList = []
-    line = replaceAliasIn(line)
-    for word in stopwordStripAndStem(line):
-        if word not in memoize:
-            memoize[word] = get_close_matches(word, processedWordsList, n = 3, cutoff = 0.75)
-        for matchedWord in memoize[word]:
-            candidateList.extend(matchDict[matchedWord])
-    candidateList = set(candidateList)
-    if lineNumber[0] in candidateList:
-        candidateList.remove(lineNumber[0])
-    allCandidateLists.append(list(candidateList))
-    lineNumber[0] += 1
+    uselessKeys = []
+    for key, val in matchDict.items():
+        if len(val) > 15:
+            uselessKeys.append(key)
+    for key in uselessKeys:
+        del matchDict[key]
+        processedWordsSet.remove(key)
+
+    return list(processedWordsSet)
+
+def merge(pathwayPairs):
+  sets = [set(pair) for pair in pathwayPairs]
+  merged = 1
+  while merged:
+    merged = 0
+    results = []
+    while sets:
+      common, rest = sets[0], sets[1:]
+      sets = []
+      for x in rest:
+        if x.isdisjoint(common):
+          sets.append(x)
+        else:
+          merged = 1
+          common |= x
+      results.append(common)
+    sets = results
+  return sets
+
+def detectPathwayMatches():
+    pathwayPairsToMerge = set()
+    for pathwayNum, candidates in enumerate(allCandidateLists):
+        for candidate in candidates:
+            assert pathwayNum != candidate
+            if isFuzzyMatch(processedPathwaysList[pathwayNum], processedPathwaysList[candidate]):
+                pathwayPairsToMerge.add((candidate, pathwayNum))
+    pathwaysToMerge = merge(pathwayPairsToMerge)
+    namesOfPathwaysToMerge = [[originalPathwaysList[ind] for ind in pathwaysSet] for pathwaysSet in pathwaysToMerge]
+    pp.pprint(namesOfPathwaysToMerge)
+    mergeCount = 0
+    for pathwaysSet in pathwaysToMerge:
+        mergeCount += len(pathwaysSet) - 1
+    print(mergeCount)
 
 
-#getCommonWords(fileList)
 processFile(fileList, stripStemLine)
 aliasDict = getAliasDict()
 enforceAliasReplacement()
-
-processedWordsList = set(processedWordsList)
-
-uselessKeys = []
-for key, val in matchDict.items():
-    if len(val) > 15:
-        uselessKeys.append(key)
-for key in uselessKeys:
-    del matchDict[key]
-    processedWordsList.remove(key)
-
-processedWordsList = list(processedWordsList)
-
+processedWordsList = cleanUselessKeys()
 processFile(fileList, getCandidates)
-
-for pathwayNum, candidates in enumerate(allCandidateLists):
-    for candidate in candidates:
-        if isFuzzyMatch(processedPathwaysList[pathwayNum], processedPathwaysList[candidate]):
-            #print(processedPathwaysList[pathwayNum] + " ||| " + processedPathwaysList[candidate])
-            print(originalPathwaysList[pathwayNum] + " ||| " + originalPathwaysList[candidate])
+detectPathwayMatches()
