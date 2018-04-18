@@ -38,7 +38,7 @@ def enforceConjunctionStyle(string):
 def romanizeNumerals(string):
     newWords = []
     for word in string.split():
-        if word.isdigit():
+        if word.isdigit() and 0 < int(word) < 10:
             newWords.append(toRoman(int(word)))
         else:
             newWords.append(word)

@@ -8,8 +8,8 @@ def isFuzzyMatch(string1, string2):
     counter = getCounter()
     totalScore = 0
     maxPossScore = 0
-    words1 = set(string1.split())
-    words2 = set(string2.split())
+    words1 = set(string1.lower().split())
+    words2 = set(string2.lower().split())
     if len(words2) < len(words1):
         words1, words2 = words2, words1
     intersectSet = set()

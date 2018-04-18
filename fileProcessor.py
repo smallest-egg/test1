@@ -6,6 +6,7 @@ from stringManipulator import processString, getAliasDict
 from wordWeighting import getCounter, updateCounter
 from difflib import get_close_matches
 from fuzzyMatching import isFuzzyMatch
+from lcs import isIntPathMatch
 
 import re
 import pprint
@@ -15,6 +16,7 @@ cachedStopWords = set(stopwords.words("english"))
 
 fileName1 = "keggnamesfull.txt"
 fileName2 = "wikinamesfull.txt"
+fileName3 = "reactomenamesfull.txt"
 fileList = [fileName1, fileName2]
 memoize = {}
 originalPathwaysList = []
@@ -143,10 +145,34 @@ def detectPathwayMatches():
         mergeCount += len(pathwaysSet) - 1
     print(mergeCount)
 
-
 processFile(fileList, stripStemLine)
 aliasDict = getAliasDict()
 enforceAliasReplacement()
 processedWordsList = cleanUselessKeys()
 processFile(fileList, getCandidates)
 detectPathwayMatches()
+
+def simulateIntPath(fileNameList):
+    pathwayPairsToMerge = set()
+    pathways = []
+    doneBefore = set()
+    for fileName in fileNameList:
+        with open (fileName) as file:
+            for line in file.readlines():
+                pathways.append(line[:-1].lower())
+
+    for ind, line in enumerate(pathways):
+        for innerInd, innerLine in enumerate(pathways):
+            key = tuple(sorted([ind, innerInd]))
+            if key not in doneBefore and ind != innerInd and isIntPathMatch(line, innerLine):
+                pathwayPairsToMerge.add((ind, innerInd))
+                doneBefore.add(key)
+    pathwaysToMerge = merge(pathwayPairsToMerge)
+    namesOfPathwaysToMerge = [[originalPathwaysList[ind] for ind in pathwaysSet] for pathwaysSet in pathwaysToMerge]
+    pp.pprint(namesOfPathwaysToMerge)
+    mergeCount = 0
+    for pathwaysSet in pathwaysToMerge:
+        mergeCount += len(pathwaysSet) - 1
+    print(mergeCount)
+
+simulateIntPath(fileList)
