@@ -1,4 +1,3 @@
-from fuzz import token_set_ratio
 from difflib import SequenceMatcher
 from wordWeighting import getCounter, weightScoreBySigmoid
 from difflib import get_close_matches
