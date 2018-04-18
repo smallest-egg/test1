@@ -23,3 +23,12 @@ def updateCounter(list):
 
 def getCounter():
     return counter
+
+def getWeight(words):
+    score = 0
+    for word in words:
+        if word in counter:
+            score += weightScoreBySigmoid(10, counter[word])
+        else:
+            score += weightScoreBySigmoid(10, 20)
+    return score / max(len(words), 1)

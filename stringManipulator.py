@@ -1,5 +1,7 @@
 import re
 from enforceStyle import enforceStyle, isAlias
+from roman import fromRoman
+from stemming.porter2 import stem
 
 aliasDict = {}
 
@@ -32,11 +34,22 @@ def separateAlias(string):
         possibleAlias = string[leftBracket + 1: rightBracket]
         hasAlias = any (isAlias(word) for word in possibleAlias.split())
         if hasAlias:
-            aliasAlt = string[:leftBracket - 1]
-            if len(possibleAlias) < len(aliasAlt):
-                possibleAlias, aliasAlt = aliasAlt, possibleAlias
-            stringSansAlias = possibleAlias + string[min(rightBracket + 1, len(string)):]
-            return possibleAlias, aliasAlt, stringSansAlias
+            longForm = string[:leftBracket - 1]
+            if len(possibleAlias) > len(longForm):
+                possibleAlias, longForm = longForm, possibleAlias
+            lastWord = longForm.split()[-1]
+            lastLetter = possibleAlias[-1]
+            if (lastWord.isdigit() or (lastWord == len(lastWord) * "I")) and lastLetter.isdigit():
+                #Need to replace with a robust roman numeral check
+                if not lastWord.isdigit():
+                    lastWord = fromRoman(lastWord)
+                else:
+                    lastWord = int(lastWord)
+                if lastWord == int(lastLetter):
+                    possibleAlias = possibleAlias[:-1].rstrip("-")
+                    longForm = " ".join(longForm.split()[:-1])
+            stringSansAlias = longForm + string[min(rightBracket + 1, len(string)):]
+            return stem(possibleAlias), stem(longForm), stringSansAlias
     return "", "", string
 
 def separateQualifiers(string):
@@ -54,9 +67,11 @@ def processString(string):
     logs = []
     for clause in string.split(" | "):
         clause = reorderOfsInNonconjunctiveClause(clause)
-        alias, aliasAlt, clauseSansAlias = separateAlias(clause)
+        alias, longForm, clauseSansAlias = separateAlias(clause)
         if alias:
-            aliasDict[aliasAlt] = alias
+            if alias in aliasDict and aliasDict[alias] != longForm:
+                print("ALIAS CONFLICT: " + aliasDict[alias] + " || " + longForm)
+            aliasDict[alias] = longForm
         clauseSansAlias = stripUselessWords(clauseSansAlias)
         logs.append(clauseSansAlias)
     return logs

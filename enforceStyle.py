@@ -12,7 +12,9 @@ def removeBracketsIfNotAlias(string):
     return re.sub("\(((\s+In|On|With).*?)\)", "\\1", standardizedSimilarPrepositions)
 
 def isAlias(word):
-    return (any(char.isdigit() for char in word) and not word.isdigit()) or sum(1 for char in word if char.isupper()) / len(word) > 0.2
+    isNumericalAcronym = any(char.isdigit() for char in word) and not word.isdigit()
+    isAlphabeticalAcronym = sum(1 for char in word if char.isupper()) / len(word) > 0.2
+    return (isNumericalAcronym or isAlphabeticalAcronym) and len(word) > 1
 
 def capitalizeWords(string):
     newWords = []

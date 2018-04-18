@@ -40,7 +40,7 @@ def stopwordStripAndStem(line):
     updateCounter(strippedStemmedList)
     return strippedStemmedList
 
-def initLine(line):
+def stripStemLine(line):
     originalPathwaysList.append(line)
     strippedStemmedList = stopwordStripAndStem(line)
     processedWordsList.extend(strippedStemmedList)
@@ -53,8 +53,36 @@ def initLine(line):
             matchDict[word] = [lineNumber[0]]
     lineNumber[0] += 1
 
+def enforceAliasReplacement():
+    toAdd = []
+    for ind, pathway in enumerate(processedPathwaysList):
+        processedPathwaysList[ind] = replaceAliasIn(pathway)
+    for key in matchDict.keys():
+        if key in aliasDict:
+            if aliasDict[key] in matchDict:
+                matchDict[aliasDict[key]] = list(set(matchDict[aliasDict[key]] + matchDict[key]))
+            else:
+                toAdd.append([aliasDict[key], key])
+    for key, val in toAdd:
+        if key in matchDict:
+            matchDict[key] = list(set(matchDict[key] + matchDict[val]))
+        else:
+            matchDict[key] = matchDict[val]
+
+def replaceAliasIn(line):
+    for alias in aliasDict.keys():
+        if alias in line:
+            ind = line.find(alias)
+            noTextLeft = ind == 0 or line[ind - 1] in (" ", "-")
+            noTextRight = (ind + len(alias) >= len(line)) or (line[ind + len(alias)] in (" ", "-"))
+            if noTextLeft and noTextRight:
+                print("REPLACED ALIAS: " + line)
+                return line.replace(alias, aliasDict[alias])
+    return line
+
 def getCandidates(line):
     candidateList = []
+    line = replaceAliasIn(line)
     for word in stopwordStripAndStem(line):
         if word not in memoize:
             memoize[word] = get_close_matches(word, processedWordsList, n = 3, cutoff = 0.75)
@@ -68,7 +96,9 @@ def getCandidates(line):
 
 
 #getCommonWords(fileList)
-processFile(fileList, initLine)
+processFile(fileList, stripStemLine)
+aliasDict = getAliasDict()
+enforceAliasReplacement()
 
 processedWordsList = set(processedWordsList)
 
@@ -87,4 +117,5 @@ processFile(fileList, getCandidates)
 for pathwayNum, candidates in enumerate(allCandidateLists):
     for candidate in candidates:
         if isFuzzyMatch(processedPathwaysList[pathwayNum], processedPathwaysList[candidate]):
+            #print(processedPathwaysList[pathwayNum] + " ||| " + processedPathwaysList[candidate])
             print(originalPathwaysList[pathwayNum] + " ||| " + originalPathwaysList[candidate])
