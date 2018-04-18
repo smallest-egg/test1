@@ -133,7 +133,7 @@ def merge(pathwayPairs):
 
 # MAGIC NUMBERS ALERT. Fix later.
 def dbName(ind):
-    if ind >= 327:
+    if ind < 327:
         return "KEGG"
     else:
         return "Wiki"

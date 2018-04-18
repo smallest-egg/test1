@@ -8,7 +8,7 @@ counter = Counter()
 
 def weightScoreBySigmoid(score, numOccurences):
     # More heavily penalizes common words, no steep drop for first few numbers to account for noise.
-    dampingFactor = 1 / (1.2 + (numOccurences / 6) ** 3) + 0.15
+    dampingFactor = 1 / (1.5 + (numOccurences / 5) ** 2.5) + 0.33
     return score * dampingFactor
 
 def getCounter():
