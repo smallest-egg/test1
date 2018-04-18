@@ -3,7 +3,7 @@ from nltk import download
 from nltk.corpus import stopwords
 from enforceStyle import enforceStyle
 from stringManipulator import processString, getAliasDict
-from wordWeighting import getCounter
+from wordWeighting import getCounter, updateCounter
 from difflib import get_close_matches
 from fuzzyMatching import isFuzzyMatch
 
@@ -39,6 +39,7 @@ def tokenize(line):
 
 def stopwordStripAndStem(line):
     strippedStemmedList = [stem(word) for word in tokenize(line) if word.lower() not in cachedStopWords]
+    updateCounter(strippedStemmedList)
     return strippedStemmedList
 
 def stripStemLine(line):
